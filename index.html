@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Cool Study Schedule</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            background: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            overflow-x: hidden;
+        }
+        h1 {
+            color: #e94560;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .day {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        .day:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+        .day h2 {
+            color: #16213e;
+            margin-top: 0;
+            font-size: 1.5em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            color: #e94560;
+        }
+        .task {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(233, 69, 96, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            flex-wrap: wrap;
+        }
+        .task:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+            transform: translateX(5px);
+        }
+        .task.completed {
+            background-color: rgba(76, 209, 55, 0.2);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+        .task span {
+            flex: 1;
+            margin-right: 10px;
+            color: #333;
+        }
+        button {
+            background-color: #e94560;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.8em;
+        }
+        button:hover {
+            background-color: #16213e;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4);
+        }
+        #progress {
+            margin-top: 30px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 1.2em;
+            color: #fff;
+        }
+        #clock {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 30px;
+            color: #e94560;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .add-event {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .add-event input, .add-event select {
+            flex-grow: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 30px;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #16213e;
+            font-size: 1em;
+            min-width: 120px;
+        }
+        .add-event input:focus, .add-event select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #e94560;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            .task {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .task button {
+                margin-top: 10px;
+                align-self: flex-end;
+            }
+            .add-event {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti-canvas"></canvas>
+    <div class="container">
+        <h1 class="floating">Super Cool Study Schedule</h1>
+        <div id="clock"></div>
+        <div id="schedule"></div>
+        <div id="progress"></div>
+        <div class="add-event">
+            <select id="day-select">
+                <option value="Monday to Friday">Monday to Friday</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Sunday">Sunday</option>
+            </select>
+            <input type="text" id="new-task" placeholder="Add new task">
+            <button onclick="addTask()">Add Task</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script>
+        const schedule = {
+            "Monday to Friday": [
+                "5:30 AM - 7:30 AM: Wake up, exercise, breakfast",
+                "8:00 AM - 5:30 PM: College",
+                "5:30 PM - 6:30 PM: Commute/Break/Dinner",
+                "6:30 PM - 8:30 PM: Placement preparation",
+                "8:30 PM - 10:00 PM: CAT/GMAT preparation",
+                "10:00 PM - 10:30 PM: Review and plan for the next day",
+                "10:30 PM: Bedtime"
+            ],
+            "Saturday": [
+                "7:00 AM - 9:00 AM: Wake up, exercise, breakfast",
+                "9:00 AM - 12:00 PM: Placement preparation (focus on coding practice)",
+                "12:00 PM - 1:00 PM: Lunch break",
+                "1:00 PM - 4:00 PM: CAT/GMAT preparation",
+                "4:00 PM - 6:00 PM: Mock test",
+                "6:00 PM - 8:00 PM: Review mock test and analyze mistakes",
+                "8:00 PM onwards: Relaxation/Hobby time"
+            ],
+            "Sunday": [
+                "8:00 AM - 10:00 AM: Wake up, light exercise, breakfast",
+                "10:00 AM - 1:00 PM: Revision of the week's topics",
+                "1:00 PM - 2:00 PM: Lunch break",
+                "2:00 PM - 5:00 PM: Work on weak areas identified during the week",
+                "5:00 PM - 7:00 PM: Plan for the upcoming week, set goals",
+                "7:00 PM onwards: Family time/Relaxation"
+            ]
+        };
+
+        function renderSchedule() {
+            const scheduleDiv = document.getElementById('schedule');
+            scheduleDiv.innerHTML = '';
+            
+            for (const [day, tasks] of Object.entries(schedule)) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'day';
+                dayDiv.innerHTML = `<h2>${day}</h2>`;
+                
+                tasks.forEach((task, index) => {
+                    const taskDiv = document.createElement('div');
+                    taskDiv.className = 'task';
+                    taskDiv.innerHTML = `
+                        <span>${task}</span>
+                        <button onclick="toggleTask(this)">Complete</button>
+                    `;
+                    dayDiv.appendChild(taskDiv);
+                });
+                
+                scheduleDiv.appendChild(dayDiv);
+            }
+
+            animateElements();
+        }
+
+        function toggleTask(button) {
+            const taskDiv = button.parentElement;
+            taskDiv.classList.toggle('completed');
+            button.textContent = taskDiv.classList.contains('completed') ? 'Undo' : 'Complete';
+            updateProgress();
+            if (taskDiv.classList.contains('completed')) {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        function updateProgress() {
+            const totalTasks = document.querySelectorAll('.task').length;
+            const completedTasks = document.querySelectorAll('.task.completed').length;
+            const progressPercentage = (completedTasks / totalTasks) * 100;
+            
+            const progressDiv = document.getElementById('progress');
+            progressDiv.textContent = `Progress: ${completedTasks}/${totalTasks} tasks completed (${progressPercentage.toFixed(2)}%)`;
+
+            anime({
+                targets: '#progress',
+                scale: [1, 1.1, 1],
+                duration: 1000,
+                easing: 'easeInOutQuad'
+            });
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const clockDiv = document.getElementById('clock');
+            clockDiv.textContent = now.toLocaleTimeString();
+        }
+
+        function addTask() {
+            const daySelect = document.getElementById('day-select');
+            const newTaskInput = document.getElementById('new-task');
+            const day = daySelect.value;
+            const newTask = newTaskInput.value.trim();
+
+            if (newTask && schedule[day]) {
+                schedule[day].push(newTask);
+                newTaskInput.value = '';
+                renderSchedule();
+                updateProgress();
+
+                anime({
+                    targets: '.task:last-child',
+                    translateX: [-50, 0],
+                    opacity: [0, 1],
+                    duration: 1000,
+                    easing: 'easeOutElastic(1, .8)'
+                });
+            }
+        }
+
+        function animateElements() {
+            anime({
+                targets: '.day',
+                translateY: [50, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(200),
+                duration: 1000,
+                easing: 'easeOutElastic(1, .8)'
+            });
+
+            anime({
+                targets: '.task',
+                translateX: [-50, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(100),
+                duration: 800,
+                easing: 'easeOutQuad'
+            });
+        }
+
+        renderSchedule();
+        updateProgress();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>
